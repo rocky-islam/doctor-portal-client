@@ -1,12 +1,31 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../contexts/AuthProvider';
 
 const Login = () => {
+  const { signIn } = useContext(AuthContext);
     const {register, formState:{errors}, handleSubmit} = useForm();
+    const [loginError, setLoginError] = useState('');
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const from = location.state?.from?.pathname || '/';
+
     // const [data, setData] = useState('');
     const handleLogin = data =>{
         console.log(data);
+
+        signIn(data.email, data.password)
+        .then(result =>{
+          const user = result.user;
+          console.log(user);
+          navigate(from, {replace: true})
+        })
+        .catch(error=> {
+          console.log(error.message);
+          setLoginError(error.message);
+        })
         
     }
 
@@ -33,9 +52,12 @@ const Login = () => {
                 <span className="label-text">Password</span>
               </label>
               <input
-                {...register("password", { 
+                {...register("password", {
                   required: "Password is required",
-                  minLength: {value: 6, message: 'Password must be 6 characters'}
+                  minLength: {
+                    value: 6,
+                    message: "Password must be 6 characters",
+                  },
                 })}
                 type="password"
                 className="input input-bordered w-full max-w-xs"
@@ -47,7 +69,9 @@ const Login = () => {
                 <span className="label-text">Forgat Password</span>
               </label>
             </div>
-
+            <div className='text-red-500'>
+              {loginError && <p>{loginError}</p>}
+            </div>
             <input
               type="submit"
               value="Login"
